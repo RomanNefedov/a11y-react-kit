@@ -1,0 +1,58 @@
+/* a11y-react-kit — global accessibility effect classes
+   Apply by wrapping your app with <A11yProvider>.
+   Classes are toggled on <html> automatically. */
+
+/* ─── Base mode ──────────────────────────────────────────────────────────────── */
+.rak-mode body {
+  background: #fff;
+  letter-spacing: 0.03em;
+  line-height: 1.8;
+}
+
+.rak-mode a {
+  text-decoration: underline;
+}
+
+.rak-mode img {
+  filter: contrast(1.1);
+}
+
+/* ─── High contrast ──────────────────────────────────────────────────────────── */
+.rak-high-contrast {
+  filter: grayscale(1) contrast(1.5);
+}
+
+/* ─── Wide spacing ───────────────────────────────────────────────────────────── */
+.rak-wide-spacing body {
+  letter-spacing: 0.06em;
+  line-height: 2;
+  word-spacing: 0.12em;
+}
+
+/* ─── Highlight links ────────────────────────────────────────────────────────── */
+.rak-highlight-links a {
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 3px;
+  outline: 1px dashed currentColor;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ─── Reduce motion ──────────────────────────────────────────────────────────── */
+.rak-reduce-motion *,
+.rak-reduce-motion *::before,
+.rak-reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* ─── Narrow reading width ───────────────────────────────────────────────────── */
+/* Targets the standard Tailwind Typography prose container.
+   Override this selector in your app CSS if needed. */
+.rak-narrow-width .prose,
+.rak-narrow-width .article-content {
+  max-width: 65ch;
+}

@@ -1,0 +1,52 @@
+{
+  "name": "a11y-react-kit",
+  "version": "1.0.0",
+  "description": "Accessibility panel + TTS hooks for React apps. Font size, contrast, spacing, link highlight, reduced motion, narrow width — all persisted to localStorage.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "files": ["dist", "README.md"],
+  "sideEffects": ["./dist/styles.css"],
+  "scripts": {
+    "build": "tsup && cp src/styles.css dist/styles.css",
+    "dev": "tsup --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "react",
+    "accessibility",
+    "a11y",
+    "tts",
+    "text-to-speech",
+    "wcag",
+    "font-size",
+    "high-contrast",
+    "hooks"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "homepage": "",
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.5.3"
+  }
+}

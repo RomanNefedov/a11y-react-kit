@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useA11y } from './context'
 import { useVoices } from './useTTS'
 import type { FontSize, ColorScheme } from './types'
@@ -36,7 +36,10 @@ const s = {
     background: 'none', border: 'none', color: '#fff', cursor: 'pointer',
     padding: 4, borderRadius: 6, display: 'flex', alignItems: 'center',
   } as React.CSSProperties,
-  body: { padding: 16, display: 'flex', flexDirection: 'column', gap: 12 } as React.CSSProperties,
+  body: {
+    padding: 16, display: 'flex', flexDirection: 'column', gap: 12,
+    maxHeight: 'calc(80vh - 52px)', overflowY: 'auto',
+  } as React.CSSProperties,
   row: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   } as React.CSSProperties,
@@ -47,6 +50,11 @@ const s = {
   sectionLabel: {
     fontSize: 14, fontWeight: 500, color: '#374151', marginBottom: 8,
   } as React.CSSProperties,
+  sectionTitle: {
+    fontSize: 11, fontWeight: 600, color: '#9ca3af',
+    textTransform: 'uppercase' as const, letterSpacing: '0.06em',
+    marginBottom: 10,
+  },
   btnGroup: { display: 'flex', gap: 8 } as React.CSSProperties,
   segBtn: (active: boolean): React.CSSProperties => ({
     flex: 1, padding: '6px 0', fontSize: 12, cursor: 'pointer', borderRadius: 8,
@@ -60,7 +68,6 @@ const s = {
     fontSize: 11, color: '#9ca3af', textAlign: 'center', paddingTop: 4,
   } as React.CSSProperties,
   rangeWrap: { display: 'flex', flexDirection: 'column', gap: 6 } as React.CSSProperties,
-  rangeRow: { display: 'flex', alignItems: 'center', gap: 8 } as React.CSSProperties,
   range: {
     flex: 1, accentColor: '#2563eb', cursor: 'pointer', height: 4,
   } as React.CSSProperties,
@@ -80,6 +87,7 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
     <button
       onClick={onToggle}
+      aria-pressed={on}
       style={{
         position: 'relative', display: 'inline-flex', alignItems: 'center',
         width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
@@ -98,12 +106,66 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   )
 }
 
+// ─── Reading ruler overlay ────────────────────────────────────────────────────
+
+function ReadingRuler({ active }: { active: boolean }) {
+  const [y, setY] = useState(-100)
+
+  useEffect(() => {
+    if (!active) return
+    const handler = (e: MouseEvent) => setY(e.clientY)
+    window.addEventListener('mousemove', handler)
+    return () => window.removeEventListener('mousemove', handler)
+  }, [active])
+
+  if (!active) return null
+
+  const BAND = 36 // highlight band height in px
+
+  return (
+    <>
+      {/* Dimmed area above the ruler */}
+      <div aria-hidden="true" style={{
+        position: 'fixed', left: 0, right: 0, top: 0,
+        height: Math.max(0, y - BAND / 2),
+        background: 'rgba(0,0,0,0.08)',
+        pointerEvents: 'none', zIndex: 8998,
+        transition: 'height 0.04s linear',
+      }} />
+      {/* Highlighted band */}
+      <div aria-hidden="true" style={{
+        position: 'fixed', left: 0, right: 0,
+        top: y - BAND / 2, height: BAND,
+        background: 'rgba(255, 235, 0, 0.25)',
+        outline: '1px solid rgba(200, 160, 0, 0.35)',
+        pointerEvents: 'none', zIndex: 8999,
+        transition: 'top 0.04s linear',
+      }} />
+      {/* Dimmed area below the ruler */}
+      <div aria-hidden="true" style={{
+        position: 'fixed', left: 0, right: 0,
+        top: y + BAND / 2, bottom: 0,
+        background: 'rgba(0,0,0,0.08)',
+        pointerEvents: 'none', zIndex: 8998,
+        transition: 'top 0.04s linear',
+      }} />
+    </>
+  )
+}
+
 // ─── Icons (minimal inline SVG) ──────────────────────────────────────────────
 
 const Icon = {
-  Eye: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+  /** Wheelchair / universal accessibility symbol */
+  Wheelchair: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="13" cy="3.5" r="1.5" fill="currentColor" stroke="none"/>
+      <path d="M11 6 L9 13 L16 13"/>
+      <path d="M9 9 L9 13"/>
+      <path d="M11 6 L15 7.5"/>
+      <path d="M9 13 L8 17"/>
+      <circle cx="11" cy="20" r="3"/>
+      <circle cx="17" cy="20.5" r="1.5" fill="currentColor" stroke="none"/>
     </svg>
   ),
   X: () => (
@@ -113,7 +175,10 @@ const Icon = {
   ),
   Sun: () => (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
     </svg>
   ),
   Contrast: () => (
@@ -128,7 +193,8 @@ const Icon = {
   ),
   Link: () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
     </svg>
   ),
   Zap: () => (
@@ -141,14 +207,41 @@ const Icon = {
       <line x1="21" y1="6" x2="3" y2="6"/><line x1="15" y1="12" x2="3" y2="12"/><line x1="17" y1="18" x2="3" y2="18"/>
     </svg>
   ),
+  /** Large targets — crosshair/target icon */
+  Target: () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>
+    </svg>
+  ),
+  /** Dyslexia font — stylised "A" */
+  DyslexiaA: () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 20 L10 4 L16 20"/><path d="M7 13 L13 13"/>
+      <path d="M18 8 Q22 8 22 12 Q22 16 18 16 L18 8"/>
+    </svg>
+  ),
+  /** Reading ruler — horizontal lines with highlight */
+  Ruler: () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="9" width="20" height="6" rx="1"/>
+      <line x1="6"  y1="9" x2="6"  y2="15"/>
+      <line x1="10" y1="9" x2="10" y2="12"/>
+      <line x1="14" y1="9" x2="14" y2="15"/>
+      <line x1="18" y1="9" x2="18" y2="12"/>
+    </svg>
+  ),
   Volume: () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
     </svg>
   ),
   Mic: () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
+      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+      <line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>
     </svg>
   ),
 }
@@ -160,14 +253,19 @@ export function AccessibilityPanel({ ttsLang }: { ttsLang?: string } = {}) {
   const {
     isAccessibilityMode, colorScheme, fontSize,
     wideSpacing, highlightLinks, reduceMotion, narrowWidth,
+    largeTargets, dyslexiaFont, readingRuler,
     ttsRate, ttsVoiceURI,
     toggleAccessibility, setColorScheme, setFontSize,
     toggleWideSpacing, toggleHighlightLinks, toggleReduceMotion, toggleNarrowWidth,
+    toggleLargeTargets, toggleDyslexiaFont, toggleReadingRuler,
     setTtsRate, setTtsVoiceURI,
   } = useA11y()
 
   const voices = useVoices(ttsLang)
-  const anyActive = isAccessibilityMode || wideSpacing || highlightLinks || reduceMotion || narrowWidth
+  const anyActive = (
+    isAccessibilityMode || wideSpacing || highlightLinks ||
+    reduceMotion || narrowWidth || largeTargets || dyslexiaFont || readingRuler
+  )
 
   const fontSizeOptions: { value: FontSize; label: string }[] = [
     { value: 'normal', label: 'А' },
@@ -176,41 +274,52 @@ export function AccessibilityPanel({ ttsLang }: { ttsLang?: string } = {}) {
   ]
 
   const colorOptions: { value: ColorScheme; label: string; icon: React.ReactNode }[] = [
-    { value: 'normal', label: 'Обычная', icon: <Icon.Sun /> },
+    { value: 'normal',        label: 'Обычная', icon: <Icon.Sun /> },
     { value: 'high-contrast', label: 'Контраст', icon: <Icon.Contrast /> },
   ]
 
-  const toggleRows = [
-    { label: 'Широкий интервал', icon: <Icon.Spacing />, on: wideSpacing, toggle: toggleWideSpacing },
-    { label: 'Выделять ссылки',  icon: <Icon.Link />,    on: highlightLinks, toggle: toggleHighlightLinks },
-    { label: 'Стоп-анимации',    icon: <Icon.Zap />,     on: reduceMotion,   toggle: toggleReduceMotion },
-    { label: 'Узкая строка',     icon: <Icon.AlignLeft />, on: narrowWidth,  toggle: toggleNarrowWidth },
+  const visualRows = [
+    { label: 'Широкий интервал', icon: <Icon.Spacing />,  on: wideSpacing,    toggle: toggleWideSpacing },
+    { label: 'Выделять ссылки',  icon: <Icon.Link />,     on: highlightLinks, toggle: toggleHighlightLinks },
+    { label: 'Стоп-анимации',    icon: <Icon.Zap />,      on: reduceMotion,   toggle: toggleReduceMotion },
+    { label: 'Узкая строка',     icon: <Icon.AlignLeft />, on: narrowWidth,   toggle: toggleNarrowWidth },
+  ]
+
+  const motorRows = [
+    { label: 'Крупные цели клика', icon: <Icon.Target />,    on: largeTargets, toggle: toggleLargeTargets },
+    { label: 'Шрифт для дислексии', icon: <Icon.DyslexiaA />, on: dyslexiaFont, toggle: toggleDyslexiaFont },
+    { label: 'Линейка чтения',     icon: <Icon.Ruler />,     on: readingRuler, toggle: toggleReadingRuler },
   ]
 
   return (
     <>
+      {/* Reading ruler — always rendered so it works without opening the panel */}
+      <ReadingRuler active={readingRuler} />
+
+      {/* Floating action button */}
       <button
         onClick={() => setOpen(true)}
         style={s.fab(anyActive)}
         title="Настройки доступности"
         aria-label="Открыть настройки доступности"
+        aria-haspopup="dialog"
       >
-        <Icon.Eye />
+        <Icon.Wheelchair />
       </button>
 
       {open && (
         <>
           <div style={s.backdrop} onClick={() => setOpen(false)} />
-          <div style={s.panel} role="dialog" aria-label="Настройки доступности">
+          <div style={s.panel} role="dialog" aria-label="Настройки доступности" aria-modal="true">
             <div style={s.header}>
-              <span style={s.headerTitle}><Icon.Eye /> Доступность</span>
+              <span style={s.headerTitle}><Icon.Wheelchair /> Доступность</span>
               <button style={s.closeBtn} onClick={() => setOpen(false)} aria-label="Закрыть">
                 <Icon.X />
               </button>
             </div>
 
             <div style={s.body}>
-              {/* Режим доступности */}
+              {/* Master toggle */}
               <div style={s.row}>
                 <span style={{ fontSize: 14, color: '#374151', fontWeight: 500 }}>
                   Режим доступности
@@ -218,7 +327,7 @@ export function AccessibilityPanel({ ttsLang }: { ttsLang?: string } = {}) {
                 <Toggle on={isAccessibilityMode} onToggle={toggleAccessibility} />
               </div>
 
-              {/* Размер шрифта */}
+              {/* Font size */}
               <div>
                 <p style={s.sectionLabel}>Размер шрифта</p>
                 <div style={s.btnGroup}>
@@ -230,7 +339,7 @@ export function AccessibilityPanel({ ttsLang }: { ttsLang?: string } = {}) {
                 </div>
               </div>
 
-              {/* Цветовая схема */}
+              {/* Color scheme */}
               <div>
                 <p style={s.sectionLabel}>Цветовая схема</p>
                 <div style={s.btnGroup}>
@@ -242,9 +351,10 @@ export function AccessibilityPanel({ ttsLang }: { ttsLang?: string } = {}) {
                 </div>
               </div>
 
-              {/* Доп. настройки */}
+              {/* Visual toggles */}
               <div style={s.divider}>
-                {toggleRows.map(({ label, icon, on, toggle }) => (
+                <p style={s.sectionTitle}>Зрение</p>
+                {visualRows.map(({ label, icon, on, toggle }) => (
                   <div key={label} style={{ ...s.row, marginBottom: 10 }}>
                     <span style={s.rowLabel}>
                       <span style={{ color: '#9ca3af' }}>{icon}</span>
@@ -255,11 +365,25 @@ export function AccessibilityPanel({ ttsLang }: { ttsLang?: string } = {}) {
                 ))}
               </div>
 
-              {/* TTS settings */}
+              {/* Motor & cognitive toggles */}
               <div style={s.divider}>
-                {/* Rate */}
-                <div style={{ ...s.rangeWrap, marginBottom: 12 }}>
-                  <div style={{ ...s.row }}>
+                <p style={s.sectionTitle}>Моторика и когниция</p>
+                {motorRows.map(({ label, icon, on, toggle }) => (
+                  <div key={label} style={{ ...s.row, marginBottom: 10 }}>
+                    <span style={s.rowLabel}>
+                      <span style={{ color: '#9ca3af' }}>{icon}</span>
+                      {label}
+                    </span>
+                    <Toggle on={on} onToggle={toggle} />
+                  </div>
+                ))}
+              </div>
+
+              {/* TTS */}
+              <div style={s.divider}>
+                <p style={s.sectionTitle}>Озвучка (TTS)</p>
+                <div style={{ ...s.rangeWrap, marginBottom: voices.length > 0 ? 12 : 0 }}>
+                  <div style={s.row}>
                     <span style={s.rowLabel}>
                       <span style={{ color: '#9ca3af' }}><Icon.Volume /></span>
                       Скорость речи
@@ -278,7 +402,6 @@ export function AccessibilityPanel({ ttsLang }: { ttsLang?: string } = {}) {
                   </div>
                 </div>
 
-                {/* Voice */}
                 {voices.length > 0 && (
                   <div>
                     <div style={{ ...s.rowLabel, marginBottom: 6 }}>

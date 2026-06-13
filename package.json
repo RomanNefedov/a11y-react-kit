@@ -1,6 +1,6 @@
 {
   "name": "a11y-react-kit",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Accessibility panel + TTS hooks for React apps. Font size, contrast, spacing, link highlight, reduced motion, narrow width — all persisted to localStorage.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -14,8 +14,13 @@
     },
     "./styles.css": "./dist/styles.css"
   },
-  "files": ["dist", "README.md"],
-  "sideEffects": ["./dist/styles.css"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": [
+    "./dist/styles.css"
+  ],
   "scripts": {
     "build": "tsup && cp src/styles.css dist/styles.css",
     "dev": "tsup --watch",

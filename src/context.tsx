@@ -17,6 +17,9 @@ const defaultState: A11yState = {
   highlightLinks: false,
   reduceMotion: false,
   narrowWidth: false,
+  largeTargets: false,
+  dyslexiaFont: false,
+  readingRuler: false,
   ttsRate: 0.85,
   ttsVoiceURI: null,
 }
@@ -29,25 +32,48 @@ function loadState(key: string): A11yState {
   return defaultState
 }
 
+/** Lazily injects the OpenDyslexic stylesheet from CDN (only once per session). */
+function loadDyslexiaFont() {
+  if (typeof document === 'undefined') return
+  if (document.getElementById('rak-dyslexia-font')) return
+  const link = document.createElement('link')
+  link.id = 'rak-dyslexia-font'
+  link.rel = 'stylesheet'
+  link.href = 'https://fonts.cdnfonts.com/css/opendyslexic'
+  document.head.appendChild(link)
+}
+
 function applyToDOM(s: A11yState) {
   const html = document.documentElement
-  html.classList.toggle('rak-mode', s.isAccessibilityMode)
-  html.classList.toggle('rak-high-contrast', s.isAccessibilityMode && s.colorScheme === 'high-contrast')
-  html.classList.toggle('rak-wide-spacing', s.wideSpacing)
+  html.classList.toggle('rak-mode',            s.isAccessibilityMode)
+  html.classList.toggle('rak-high-contrast',   s.isAccessibilityMode && s.colorScheme === 'high-contrast')
+  html.classList.toggle('rak-wide-spacing',    s.wideSpacing)
   html.classList.toggle('rak-highlight-links', s.highlightLinks)
-  html.classList.toggle('rak-reduce-motion', s.reduceMotion)
-  html.classList.toggle('rak-narrow-width', s.narrowWidth)
+  html.classList.toggle('rak-reduce-motion',   s.reduceMotion)
+  html.classList.toggle('rak-narrow-width',    s.narrowWidth)
+  html.classList.toggle('rak-large-targets',   s.largeTargets)
+  html.classList.toggle('rak-dyslexia-font',   s.dyslexiaFont)
+  // readingRuler is a React component overlay — no CSS class needed
+
+  if (s.dyslexiaFont) loadDyslexiaFont()
+
   html.style.setProperty(
     '--rak-font-size',
     s.isAccessibilityMode ? fontSizeMap[s.fontSize] : '16px',
   )
 }
 
+type ToggleField = keyof Pick<
+  A11yState,
+  'wideSpacing' | 'highlightLinks' | 'reduceMotion' | 'narrowWidth' |
+  'largeTargets' | 'dyslexiaFont' | 'readingRuler'
+>
+
 type Action =
   | { type: 'TOGGLE_A11Y' }
   | { type: 'SET_COLOR_SCHEME'; payload: ColorScheme }
   | { type: 'SET_FONT_SIZE'; payload: FontSize }
-  | { type: 'TOGGLE'; field: keyof Pick<A11yState, 'wideSpacing' | 'highlightLinks' | 'reduceMotion' | 'narrowWidth'> }
+  | { type: 'TOGGLE'; field: ToggleField }
   | { type: 'SET_TTS_RATE'; payload: number }
   | { type: 'SET_TTS_VOICE_URI'; payload: string | null }
 
@@ -85,6 +111,9 @@ export function A11yProvider({ children, storageKey = STORAGE_KEY }: {
     toggleHighlightLinks: () => dispatch({ type: 'TOGGLE', field: 'highlightLinks' }),
     toggleReduceMotion:   () => dispatch({ type: 'TOGGLE', field: 'reduceMotion' }),
     toggleNarrowWidth:    () => dispatch({ type: 'TOGGLE', field: 'narrowWidth' }),
+    toggleLargeTargets:   () => dispatch({ type: 'TOGGLE', field: 'largeTargets' }),
+    toggleDyslexiaFont:   () => dispatch({ type: 'TOGGLE', field: 'dyslexiaFont' }),
+    toggleReadingRuler:   () => dispatch({ type: 'TOGGLE', field: 'readingRuler' }),
     setTtsRate:     (rate) => dispatch({ type: 'SET_TTS_RATE', payload: rate }),
     setTtsVoiceURI: (uri)  => dispatch({ type: 'SET_TTS_VOICE_URI', payload: uri }),
   }

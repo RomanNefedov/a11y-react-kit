@@ -5,10 +5,16 @@ export interface A11yState {
   isAccessibilityMode: boolean
   colorScheme: ColorScheme
   fontSize: FontSize
+  // Visual
   wideSpacing: boolean
   highlightLinks: boolean
   reduceMotion: boolean
   narrowWidth: boolean
+  // Motor & cognitive
+  largeTargets: boolean
+  dyslexiaFont: boolean
+  readingRuler: boolean
+  // TTS
   ttsRate: number
   ttsVoiceURI: string | null
 }
@@ -21,6 +27,9 @@ export interface A11yActions {
   toggleHighlightLinks: () => void
   toggleReduceMotion: () => void
   toggleNarrowWidth: () => void
+  toggleLargeTargets: () => void
+  toggleDyslexiaFont: () => void
+  toggleReadingRuler: () => void
   setTtsRate: (rate: number) => void
   setTtsVoiceURI: (uri: string | null) => void
 }

@@ -56,3 +56,40 @@
 .rak-narrow-width .article-content {
   max-width: 65ch;
 }
+
+/* ─── Large click targets (WCAG 2.5.5) ──────────────────────────────────────── */
+/* Ensures interactive elements are at least 44×44 px — recommended for users
+   with motor impairments, tremors, or limited dexterity. */
+.rak-large-targets a,
+.rak-large-targets button,
+.rak-large-targets [role="button"],
+.rak-large-targets input:not([type="hidden"]),
+.rak-large-targets select,
+.rak-large-targets label {
+  min-height: 44px;
+  min-width: 44px;
+  padding-block: 10px;
+  padding-inline: 12px;
+  box-sizing: border-box;
+}
+
+/* ─── Dyslexia-friendly font ─────────────────────────────────────────────────── */
+/* Switches body text to OpenDyslexic (loaded from CDN when enabled) with
+   Verdana as a fallback. Also increases word/letter spacing for legibility. */
+.rak-dyslexia-font body,
+.rak-dyslexia-font p,
+.rak-dyslexia-font li,
+.rak-dyslexia-font h1,
+.rak-dyslexia-font h2,
+.rak-dyslexia-font h3,
+.rak-dyslexia-font h4,
+.rak-dyslexia-font span,
+.rak-dyslexia-font article,
+.rak-dyslexia-font blockquote,
+.rak-dyslexia-font td,
+.rak-dyslexia-font th {
+  font-family: 'OpenDyslexic', Verdana, Geneva, Arial, sans-serif !important;
+  word-spacing: 0.12em;
+  letter-spacing: 0.05em;
+  line-height: 1.9;
+}
